@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Base de Conhecimento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 600px;  /* Aumentado para dar mais espaço */
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        #chat-box {
+            width: 100%;
+            height: 500px;  /* Aumentado para dar mais espaço */
+            border-bottom: 1px solid #ddd;
+            padding: 20px;  /* Espaçamento maior */
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+        }
+        .user-message {
+            text-align: right;
+            margin: 15px 0;  /* Aumentado o espaçamento vertical */
+        }
+        .user-message span {
+            background-color: #0084ff;
+            color: white;
+            padding: 12px 16px;  /* Aumentado o padding */
+            border-radius: 20px;  /* Aumentado o arredondamento */
+            display: inline-block;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .bot-response {
+            text-align: left;
+            margin: 15px 0;  /* Aumentado o espaçamento vertical */
+        }
+        .bot-response span {
+            background-color: #eaeaea;
+            padding: 12px 16px;  /* Aumentado o padding */
+            border-radius: 20px;  /* Aumentado o arredondamento */
+            display: inline-block;
+            max-width: 80%;
+            word-wrap: break-word;
+            white-space: pre-line;  /* Preserva quebras de linha */
+        }
+        #user-input-container {
+            display: flex;
+            padding: 20px;  /* Aumentado o espaçamento */
+            border-top: 1px solid #ddd;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+        #user-input {
+            width: calc(100% - 70px);  /* Redimensionado */
+            padding: 15px;  /* Aumentado o padding */
+            font-size: 18px;  /* Aumentado o tamanho da fonte */
+            border: 1px solid #ddd;
+            border-radius: 30px;  /* Arredondamento maior */
+        }
+        #send-btn {
+            width: 50px;  /* Aumentado */
+            height: 50px;  /* Aumentado */
+            margin-left: 10px;
+            border: none;
+            background-color: #0084ff;
+            color: white;
+            font-size: 20px;  /* Aumentado o tamanho da fonte */
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #send-btn:hover {
+            background-color: #006bbf;
+        }
+        #suggestions {
+            border: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: white;
+            position: absolute;
+            width: calc(100% - 70px);
+            z-index: 1000;
+            margin-top: -140px;
+            box-sizing: border-box;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .suggestion-item:hover {
+            background-color: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="user-input-container">
+            <input type="text" id="user-input" placeholder="Digite sua pergunta..." autocomplete="off">
+            <button id="send-btn">⮞</button>
+        </div>
+        <div id="suggestions"></div>
+    </div>
+
+    <script>
+        // Função para enviar a pergunta
+        document.getElementById('send-btn').onclick = async function() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput === '') return;
+
+            // Exibir a pergunta do usuário no chat
+            const chatBox = document.getElementById('chat-box');
+            const userMessage = `<div class="user-message"><span>${userInput}</span></div>`;
+            chatBox.innerHTML += userMessage;
+
+            // Limpar o campo de entrada
+            document.getElementById('user-input').value = '';
+            document.getElementById('suggestions').innerHTML = ''; // Limpar sugestões
+
+            // Enviar a pergunta para o servidor
+            const response = await fetch('/chatbot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ pergunta: userInput }),
+            });
+
+            const data = await response.json();
+
+            // Exibir a resposta do chatbot no chat
+            const botResponse = `<div class="bot-response"><span>${data.resposta}</span></div>`;
+            chatBox.innerHTML += botResponse;
+            chatBox.scrollTop = chatBox.scrollHeight; // Rolar para o final do chat
+        };
+
+        // Função para buscar sugestões conforme o usuário digita
+        document.getElementById('user-input').oninput = async function() {
+            const searchTerm = this.value;
+
+            // Se o usuário apagar tudo, não exibir sugestões
+            if (searchTerm === '') {
+                document.getElementById('suggestions').innerHTML = '';
+                return;
+            }
+
+            // Buscar sugestões no servidor
+            const response = await fetch(`/sugestoes?termo=${searchTerm}`);
+            const suggestions = await response.json();
+
+            // Exibir as sugestões
+            const suggestionsDiv = document.getElementById('suggestions');
+            suggestionsDiv.innerHTML = ''; // Limpar sugestões anteriores
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.classList.add('suggestion-item');
+                suggestionItem.innerText = suggestion;
+                suggestionItem.onclick = () => {
+                    // Quando o usuário clica em uma sugestão, ela é inserida no campo de input
+                    document.getElementById('user-input').value = suggestion;
+                    suggestionsDiv.innerHTML = ''; // Limpar as sugestões
+                };
+                suggestionsDiv.appendChild(suggestionItem);
+            });
+        };
+    </script>
+</body>
+</html>

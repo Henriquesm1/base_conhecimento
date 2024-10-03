@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Pergunta à Base de Conhecimento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .step-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Adicionar Pergunta à Base de Conhecimento</h1>
+    <form id="form-conhecimento" action="/adicionar_conhecimento" method="POST">
+        <label for="pergunta">Pergunta:</label>
+        <input type="text" id="pergunta" name="pergunta" placeholder="Digite a pergunta" required>
+
+        <label for="categoria">Categoria:</label>
+        <input type="text" id="categoria" name="categoria" placeholder="Digite a categoria (ex: Banco de Dados)" required>
+
+        <label for="palavras_chave">Palavras-Chave (separadas por vírgula):</label>
+        <input type="text" id="palavras_chave" name="palavras_chave" placeholder="Digite palavras-chave para a busca" required>
+
+        <div id="resposta-container">
+            <label for="resposta">Resposta:</label>
+            <textarea id="resposta" name="resposta" rows="4" placeholder="Digite a resposta ou o passo a passo" required></textarea>
+        </div>
+
+        <label for="exemplo">Exemplo de Sintaxe (opcional):</label>
+        <textarea id="exemplo" name="exemplo" rows="4" placeholder="Digite um exemplo de sintaxe (opcional)"></textarea>
+
+        <button type="button" id="add-step-btn">Adicionar Passo</button>
+        <button type="submit">Salvar Conhecimento</button>
+    </form>
+
+    <script>
+        document.getElementById('add-step-btn').onclick = function() {
+            // Criar um novo campo de passo
+            const container = document.getElementById('resposta-container');
+            const newStep = document.createElement('textarea');
+            newStep.name = 'resposta';
+            newStep.placeholder = 'Digite o próximo passo';
+            newStep.rows = 2;
+            newStep.classList.add('step-container');
+            container.appendChild(newStep);
+        };
+    </script>
+</body>
+</html>
